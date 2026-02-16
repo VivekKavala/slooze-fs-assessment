@@ -1,0 +1,109 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthResponse {
+  accessToken: String!
+  user: User!
+}
+
+input CreateOrderInput {
+  items: [OrderItemInput!]!
+  restaurantId: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type MenuItem {
+  category: String
+  id: String!
+  name: String!
+  price: Float!
+}
+
+type Mutation {
+  cancelOrder(id: String!): Order!
+  createOrder(createOrderInput: CreateOrderInput!): Order!
+  createPaymentMethod(last4: String!, name: String!): PaymentMethod!
+  login(loginInput: LoginInput!): AuthResponse!
+  payOrder(id: String!): Order!
+  removePaymentMethod(id: String!): PaymentMethod!
+}
+
+type Order {
+  createdAt: DateTime!
+  id: String!
+  items: [OrderItem!]!
+  restaurant: Restaurant!
+  status: OrderStatus!
+  totalAmount: Float!
+}
+
+type OrderItem {
+  id: String!
+  name: String!
+  price: Float!
+  quantity: Float!
+}
+
+input OrderItemInput {
+  menuItemId: String!
+  quantity: Int!
+}
+
+enum OrderStatus {
+  CANCELLED
+  DELIVERED
+  PAID
+  PENDING
+}
+
+type PaymentMethod {
+  id: String!
+  isActive: Boolean!
+  last4: String!
+  name: String!
+}
+
+type Query {
+  orders: [Order!]!
+  paymentMethods: [PaymentMethod!]!
+  restaurant(id: String!): Restaurant!
+  restaurants: [Restaurant!]!
+}
+
+"""User region (INDIA, AMERICA)"""
+enum Region {
+  AMERICA
+  INDIA
+}
+
+type Restaurant {
+  id: String!
+  menuItems: [MenuItem]
+  name: String!
+  region: Region!
+}
+
+"""User roles (ADMIN, MANAGER, MEMBER)"""
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+type User {
+  email: String!
+  id: String!
+  name: String!
+  region: Region
+  role: Role!
+}

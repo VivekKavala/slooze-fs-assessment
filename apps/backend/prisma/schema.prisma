@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 1. User Roles & Access
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum Region {
+  INDIA
+  AMERICA
+}
+
+model User {
+  id       String  @id @default(uuid())
+  email    String  @unique
+  name     String
+  password String // Hashed
+  role     Role
+  region   Region? // Null = Global Admin, Set = Restricted
+
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 2. Restaurant & Menu
+model Restaurant {
+  id        String     @id @default(uuid())
+  name      String
+  region    Region // Restaurants MUST belong to a region
+  menuItems MenuItem[]
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+}
+
+model MenuItem {
+  id       String  @id @default(uuid())
+  name     String
+  price    Float
+  category String? // e.g., "Starters", "Main Course"
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+}
+
+// 3. Orders & Payments
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  DELIVERED
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id       String @id @default(uuid())
+  name     String
+  price    Float
+  quantity Int
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+}
+
+model PaymentMethod {
+  id        String  @id @default(uuid())
+  name      String
+  last4     String
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

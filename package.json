@@ -1,0 +1,21 @@
+{
+  "name": "slooze-assessment-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "build": "pnpm --filter \"./apps/*\" build",
+    "start": "pnpm --filter \"./apps/*\" start",
+    "lint": "pnpm --filter \"./apps/*\" lint"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.0"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "dependencies": {
+    "@apollo/server": "^5.4.0",
+    "@nestjs/apollo": "^13.2.4",
+    "graphql": "^16.12.0"
+  }
+}
