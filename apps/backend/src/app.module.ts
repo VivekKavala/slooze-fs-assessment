@@ -20,9 +20,13 @@ import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
     }),
     GraphQLModule.forRoot({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile:
+        process.env.NODE_ENV === 'production' || process.env.VERCEL
+          ? true
+          : join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
+      introspection: true,
     }),
 
     PrismaModule,
