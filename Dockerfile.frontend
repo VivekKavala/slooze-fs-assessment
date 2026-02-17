@@ -1,0 +1,24 @@
+# Dockerfile.frontend
+FROM node:20-slim AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+# Build Frontend (Adjust filter name if your package.json name is different)
+# We use the path filter to be safe: ./apps/frontend
+RUN pnpm --filter ./apps/frontend build
+
+EXPOSE 3000
+
+# Start Next.js
+WORKDIR /app/apps/frontend
+CMD ["pnpm", "start"]
