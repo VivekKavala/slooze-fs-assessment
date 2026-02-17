@@ -23,9 +23,9 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # 8. Generate Prisma Client (Backend specific)
-# FIX: Use '--filter' from root instead of changing directory.
-# This ensures pnpm correctly finds the 'prisma' binary in the workspace context.
-RUN pnpm --filter ./apps/backend exec prisma generate
+# FIX: Use 'pnpm run' to execute the script defined in package.json.
+# This relies on pnpm's internal resolution to find the binary, which is more robust than 'exec'.
+RUN pnpm --filter ./apps/backend run postinstall
 
 # 9. Build the Backend
 WORKDIR /app
