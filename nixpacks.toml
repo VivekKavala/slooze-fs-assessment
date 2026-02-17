@@ -1,9 +1,10 @@
 # nixpacks.toml
 
 [phases.setup]
-# 1. We include 'pnpm' here so it is installed at the system level.
-# 2. We add 'jq' and 'wget' to FORCE a cache refresh (Cache Busting).
-nixPkgs = ["nodejs-20_x", "openssl", "pnpm", "jq", "wget"]
+# 1. Use 'nodejs_20' (underscore) which is the correct Nix attribute
+# 2. We include 'pnpm' so it installs at the system level
+# 3. 'jq' and 'wget' ensure cache busting if needed
+nixPkgs = ["nodejs_20", "openssl", "pnpm", "jq", "wget"]
 
 [phases.install]
 dependsOn = ["setup"]
