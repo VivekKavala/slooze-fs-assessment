@@ -1,10 +1,14 @@
 # nixpacks.toml
 
 [phases.setup]
-# 1. Use 'nodejs_20' (underscore) which is the correct Nix attribute
-# 2. We include 'pnpm' so it installs at the system level
-# 3. 'jq' and 'wget' ensure cache busting if needed
-nixPkgs = ["nodejs_20", "openssl", "pnpm", "jq", "wget"]
+# Let Nixpacks install Node.js automatically based on package.json engines.
+# We only explicitly add system libraries needed for Prisma/Database.
+# We add 'pnpm' here if it's available in the default channel.
+nixPkgs = ["openssl", "pnpm"]
+
+# If pnpm isn't in the default nix channel, we force it via npm
+# This runs AFTER nixPkgs are installed
+cmds = ["npm install -g pnpm@9"]
 
 [phases.install]
 dependsOn = ["setup"]
