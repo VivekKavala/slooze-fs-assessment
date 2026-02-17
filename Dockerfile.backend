@@ -2,39 +2,42 @@
 # 1. Use Node 20 (Required for Prisma 7)
 FROM node:20-slim AS base
 
-# 2. Enable pnpm (Native to Node 20)
+# 2. Enable pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-# 3. Install System Dependencies (OpenSSL is required for Prisma Engine)
+# 3. Install System Dependencies
 RUN apt-get update -y && apt-get install -y openssl procps
 
 # 4. Setup Working Directory
 WORKDIR /app
 
-# 5. Copy ALL Source Code FIRST
+# 5. Copy Source Code
 COPY . .
 
-# 6. Install Dependencies (Frozen Lockfile)
+# 6. Install Dependencies
 RUN pnpm install --frozen-lockfile
 
-# 7. Generate Prisma Client (CRITICAL FIX)
-# We run this from the ROOT so it generates into the ROOT node_modules where pnpm hoisted the package.
-# This fixes the "Module '@prisma/client' has no exported member" error.
+# 7. Generate Prisma Client
+# We run this to generate the client inside apps/backend/node_modules
 RUN npx prisma generate --schema=apps/backend/prisma/schema.prisma
 
-# 8. Patch the Build Script (CRITICAL FIX)
-# We remove 'prisma generate' from the package.json build script using 'sed'.
-# This prevents 'pnpm build' from re-generating the client into the wrong (local) directory.
+# 8. FIX: Sync Generated Client to Root
+# Because pnpm hoists @prisma/client to the root, we must ensure the generated 
+# .prisma folder exists there too, or TypeScript will find an empty client.
+RUN cp -r apps/backend/node_modules/.prisma node_modules/ || true
+
+# 9. Patch the Build Script
+# Prevent 'pnpm build' from trying to re-run generate during the build phase
 RUN sed -i 's/npx prisma generate && //g' apps/backend/package.json && \
     sed -i 's/prisma generate && //g' apps/backend/package.json
 
-# 9. Build the Backend
+# 10. Build the Backend
 RUN pnpm --filter backend build
 
-# 10. Expose Port
+# 11. Expose Port
 EXPOSE 3001
 
-# 11. Start Command
+# 12. Start Command
 CMD ["node", "apps/backend/dist/main.js"]
