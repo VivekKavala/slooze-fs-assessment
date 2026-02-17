@@ -13,27 +13,24 @@ RUN apt-get update -y && apt-get install -y openssl
 # 4. Setup Working Directory
 WORKDIR /app
 
-# 5. Copy Root Workspace Configs
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# 5. Copy ALL Source Code FIRST
+# We copy everything immediately so pnpm can see the 'apps/backend/package.json'
+# inside the workspace structure before installing.
+COPY . .
 
 # 6. Install Dependencies (Frozen Lockfile for speed/consistency)
 RUN pnpm install --frozen-lockfile
 
-# 7. Copy Source Code
-COPY . .
-
-# 8. Generate Prisma Client (Backend specific)
-# FIX: Use 'pnpm run' to execute the script defined in package.json.
-# This relies on pnpm's internal resolution to find the binary, which is more robust than 'exec'.
+# 7. Generate Prisma Client (Backend specific)
+# Now that dependencies are installed in the correct structure, this will work.
 RUN pnpm --filter ./apps/backend run postinstall
 
-# 9. Build the Backend
-WORKDIR /app
+# 8. Build the Backend
 RUN pnpm --filter backend build
 
-# 10. Expose Port
+# 9. Expose Port
 EXPOSE 3001
 
-# 11. Start Command
+# 10. Start Command
 # We run the compiled main.js directly for performance
 CMD ["node", "apps/backend/dist/main.js"]
