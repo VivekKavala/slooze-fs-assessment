@@ -1,12 +1,9 @@
 # nixpacks.toml
 
 [phases.setup]
-# 1. Install Node 20 and OpenSSL (Required for Prisma)
-nixPkgs = ["nodejs-20_x", "openssl"]
-
-# 2. Use Corepack to enable pnpm (Native Node feature)
-# This is more reliable than npm install -g in Nixpacks
-cmds = ["corepack enable pnpm"]
+# 1. Install Node 20, OpenSSL, AND pnpm directly via Nix
+# This guarantees the binary is in the global $PATH
+nixPkgs = ["nodejs-20_x", "openssl", "pnpm"]
 
 [phases.install]
 dependsOn = ["setup"]
