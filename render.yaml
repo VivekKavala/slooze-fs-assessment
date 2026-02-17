@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: slooze-backend
+    env: node
+    plan: free
+    # 1. Force install pnpm, install deps, then build ONLY the backend
+    buildCommand: npm install -g pnpm && pnpm install && pnpm --filter backend build
+    # 2. Start the compiled main file
+    startCommand: node apps/backend/dist/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      # 3. Use external VPS Database
+      # 'sync: false' means Render will ask you to input this value securely in the Dashboard
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
