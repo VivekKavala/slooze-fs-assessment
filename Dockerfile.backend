@@ -1,26 +1,40 @@
 # Dockerfile.backend
+# 1. Use Node 20 (Required for Prisma 7)
 FROM node:20-slim AS base
 
+# 2. Enable pnpm (Native to Node 20)
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
+# 3. Setup Working Directory
 WORKDIR /app
+
+# 4. Copy Root Workspace Configs
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install dependencies
+# 5. Install Dependencies (Frozen Lockfile for speed/consistency)
 RUN pnpm install --frozen-lockfile
 
+# 6. Copy Source Code
 COPY . .
 
-# Generate Prisma Client (Backend specific)
+# 7. Generate Prisma Client (Backend specific)
+# We navigate to the backend folder context to ensure it finds the schema
 WORKDIR /app/apps/backend
-RUN npx prisma generate
+# FIX: Use 'pnpm exec' instead of 'npx'.
+# 'npx' was creating an isolated environment that couldn't find 'dotenv'.
+# 'pnpm exec' uses the project's local dependencies correctly.
+RUN pnpm exec prisma generate
 
-# Build Backend
+# 8. Build the Backend
+# Return to root to run the workspace command
 WORKDIR /app
 RUN pnpm --filter backend build
 
+# 9. Expose Port
 EXPOSE 3001
 
+# 10. Start Command
+# We run the compiled main.js directly for performance
 CMD ["node", "apps/backend/dist/main.js"]
