@@ -5,17 +5,18 @@
 # We do NOT list nodejs here; Nixpacks detects it from package.json
 nixPkgs = ["openssl"]
 
-# 2. Install pnpm globally using npm
-# This is safer than relying on nix packages which might change names
+# 2. Install pnpm globally using npm to ensure it's available for npx
 cmds = ["npm install -g pnpm"]
 
 [phases.install]
 dependsOn = ["setup"]
-cmds = ["pnpm install"]
+# 3. Use 'npx -y pnpm' to run commands.
+# This bypasses the PATH issue by letting npx locate the binary.
+cmds = ["npx -y pnpm install"]
 
 [phases.build]
 dependsOn = ["install"]
-cmds = ["pnpm build"]
+cmds = ["npx -y pnpm build"]
 
 [start]
-cmd = "pnpm start"
+cmd = "npx -y pnpm start"
