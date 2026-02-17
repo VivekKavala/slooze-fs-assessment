@@ -7,34 +7,33 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-# 3. Setup Working Directory
+# 3. Install System Dependencies (OpenSSL is required for Prisma Engine)
+RUN apt-get update -y && apt-get install -y openssl
+
+# 4. Setup Working Directory
 WORKDIR /app
 
-# 4. Copy Root Workspace Configs
+# 5. Copy Root Workspace Configs
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# 5. Install Dependencies (Frozen Lockfile for speed/consistency)
+# 6. Install Dependencies (Frozen Lockfile for speed/consistency)
 RUN pnpm install --frozen-lockfile
 
-# 6. Copy Source Code
+# 7. Copy Source Code
 COPY . .
 
-# 7. Generate Prisma Client (Backend specific)
-# We navigate to the backend folder context to ensure it finds the schema
-WORKDIR /app/apps/backend
-# FIX: Use 'pnpm exec' instead of 'npx'.
-# 'npx' was creating an isolated environment that couldn't find 'dotenv'.
-# 'pnpm exec' uses the project's local dependencies correctly.
-RUN pnpm exec prisma generate
+# 8. Generate Prisma Client (Backend specific)
+# FIX: Use '--filter' from root instead of changing directory.
+# This ensures pnpm correctly finds the 'prisma' binary in the workspace context.
+RUN pnpm --filter ./apps/backend exec prisma generate
 
-# 8. Build the Backend
-# Return to root to run the workspace command
+# 9. Build the Backend
 WORKDIR /app
 RUN pnpm --filter backend build
 
-# 9. Expose Port
+# 10. Expose Port
 EXPOSE 3001
 
-# 10. Start Command
+# 11. Start Command
 # We run the compiled main.js directly for performance
 CMD ["node", "apps/backend/dist/main.js"]
