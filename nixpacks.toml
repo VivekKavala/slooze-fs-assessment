@@ -1,17 +1,18 @@
 # nixpacks.toml
 
 [phases.setup]
-# 1. Install Node 20, OpenSSL, AND pnpm directly via Nix
-# This guarantees the binary is in the global $PATH
-nixPkgs = ["nodejs-20_x", "openssl", "pnpm"]
+# 1. Added 'curl' specifically to break the existing cache
+nixPkgs = ["nodejs-20_x", "openssl", "curl"]
 
 [phases.install]
 dependsOn = ["setup"]
-cmds = ["pnpm install"]
+# 2. Force install pnpm using npm immediately before using it
+# This guarantees it exists in this layer regardless of the setup phase
+cmds = ["npm install -g pnpm@9 && pnpm install"]
 
 [phases.build]
 dependsOn = ["install"]
-# 3. Prisma generate is crucial before build
+# 3. Use pnpm to build (it should persist from the install layer)
 cmds = ["pnpm build"]
 
 [start]
