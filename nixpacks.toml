@@ -1,27 +1,18 @@
 # nixpacks.toml
 
 [phases.setup]
-# 1. Install Node 20, OpenSSL, and Curl (for cache busting)
-nixPkgs = ["nodejs-20_x", "openssl", "curl"]
+nixPkgs = ["nodejs-20_x", "openssl"]
 
 [phases.install]
 dependsOn = ["setup"]
-# 2. Force install pnpm AND explicitly call it by full path or add to PATH
-# We chain the commands in a single shell session to ensure PATH visibility
-cmds = [
-    "npm install -g pnpm@9",
-    "export PATH=$PATH:$(npm bin -g)",
-    "pnpm install"
-]
+# Force install pnpm immediately before using it in the same shell
+cmds = ["npm install -g pnpm@9 && pnpm install"]
 
 [phases.build]
 dependsOn = ["install"]
-# 3. Same logic for build phase - ensure it can find pnpm
-cmds = [
-    "export PATH=$PATH:$(npm bin -g)",
-    "pnpm build"
-]
+# Force install pnpm immediately before using it for build
+cmds = ["npm install -g pnpm@9 && pnpm build"]
 
 [start]
-# 4. Start command
-cmd = "export PATH=$PATH:$(npm bin -g) && pnpm start"
+# Force install pnpm immediately before start
+cmd = "npm install -g pnpm@9 && pnpm start"
