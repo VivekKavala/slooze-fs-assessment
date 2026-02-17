@@ -1,18 +1,21 @@
 # nixpacks.toml
 
 [phases.setup]
-nixPkgs = ["nodejs-20_x", "openssl"]
+# 1. We include 'pnpm' here so it is installed at the system level.
+# 2. We add 'jq' and 'wget' to FORCE a cache refresh (Cache Busting).
+nixPkgs = ["nodejs-20_x", "openssl", "pnpm", "jq", "wget"]
 
 [phases.install]
 dependsOn = ["setup"]
-# Enable corepack and install in one go
-cmds = ["corepack enable && pnpm install"]
+cmds = ["pnpm install"]
 
 [phases.build]
 dependsOn = ["install"]
-# Enable corepack and build
-cmds = ["corepack enable && pnpm build"]
+cmds = ["pnpm build"]
 
 [start]
-# Enable corepack and start
-cmd = "corepack enable && pnpm start"
+cmd = "pnpm start"
+```
+
+### **Critical Step: Push to Git**
+Since Dokploy pulls from your repository, you **must commit and push** this file to GitHub/GitLab for the changes to take effect on your VPS.
