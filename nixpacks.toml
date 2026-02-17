@@ -1,0 +1,13 @@
+# nixpacks.toml
+
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "pnpm", "openssl"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "pnpm start"
