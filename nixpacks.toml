@@ -1,21 +1,20 @@
 # nixpacks.toml
 
 [phases.setup]
-# 1. Install Node 20 (Prisma 7 requirement)
-nixPkgs = ["nodejs-20_x"]
+# 1. Install Node 20 and OpenSSL (Required for Prisma)
+nixPkgs = ["nodejs-20_x", "openssl"]
 
-# 2. Manually force install pnpm using npm
-# This fixes "pnpm: command not found" by ensuring the binary is installed globally
-cmds = ["npm install -g pnpm@9"]
+# 2. Use Corepack to enable pnpm (Native Node feature)
+# This is more reliable than npm install -g in Nixpacks
+cmds = ["corepack enable pnpm"]
 
 [phases.install]
-# 3. Install dependencies using the pnpm we just installed
 dependsOn = ["setup"]
 cmds = ["pnpm install"]
 
 [phases.build]
-# 4. Build the app
 dependsOn = ["install"]
+# 3. Prisma generate is crucial before build
 cmds = ["pnpm build"]
 
 [start]
