@@ -4,7 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderInput } from './dto/create-order.input';
 import { AuthenticatedUser } from '../restaurants/restaurants.service';
 import { OrderStatus, Role } from '@prisma/client';
