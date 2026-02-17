@@ -5,14 +5,14 @@ nixPkgs = ["nodejs-20_x", "openssl"]
 
 [phases.install]
 dependsOn = ["setup"]
-# Force install pnpm immediately before using it in the same shell
-cmds = ["npm install -g pnpm@9 && pnpm install"]
+# Enable corepack and install in one go
+cmds = ["corepack enable && pnpm install"]
 
 [phases.build]
 dependsOn = ["install"]
-# Force install pnpm immediately before using it for build
-cmds = ["npm install -g pnpm@9 && pnpm build"]
+# Enable corepack and build
+cmds = ["corepack enable && pnpm build"]
 
 [start]
-# Force install pnpm immediately before start
-cmd = "npm install -g pnpm@9 && pnpm start"
+# Enable corepack and start
+cmd = "corepack enable && pnpm start"
