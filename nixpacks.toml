@@ -1,14 +1,13 @@
 # nixpacks.toml
 
 [phases.setup]
-# Let Nixpacks install Node.js automatically based on package.json engines.
-# We only explicitly add system libraries needed for Prisma/Database.
-# We add 'pnpm' here if it's available in the default channel.
-nixPkgs = ["openssl", "pnpm"]
+# 1. Only install OpenSSL (System dependency for Prisma)
+# We do NOT list nodejs here; Nixpacks detects it from package.json
+nixPkgs = ["openssl"]
 
-# If pnpm isn't in the default nix channel, we force it via npm
-# This runs AFTER nixPkgs are installed
-cmds = ["npm install -g pnpm@9"]
+# 2. Install pnpm globally using npm
+# This is safer than relying on nix packages which might change names
+cmds = ["npm install -g pnpm"]
 
 [phases.install]
 dependsOn = ["setup"]
