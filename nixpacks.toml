@@ -15,7 +15,3 @@ cmds = ["pnpm build"]
 
 [start]
 cmd = "pnpm start"
-```
-
-### **Critical Step: Push to Git**
-Since Dokploy pulls from your repository, you **must commit and push** this file to GitHub/GitLab for the changes to take effect on your VPS.
