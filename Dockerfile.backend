@@ -8,29 +8,33 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 # 3. Install System Dependencies (OpenSSL is required for Prisma Engine)
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y openssl procps
 
 # 4. Setup Working Directory
 WORKDIR /app
 
 # 5. Copy ALL Source Code FIRST
-# We copy everything immediately so pnpm can see the 'apps/backend/package.json'
-# inside the workspace structure before installing.
 COPY . .
 
-# 6. Install Dependencies (Frozen Lockfile for speed/consistency)
+# 6. Install Dependencies (Frozen Lockfile)
 RUN pnpm install --frozen-lockfile
 
-# 7. Generate Prisma Client (Backend specific)
-# Now that dependencies are installed in the correct structure, this will work.
-RUN pnpm --filter ./apps/backend run postinstall
+# 7. Generate Prisma Client (CRITICAL FIX)
+# We run this from the ROOT so it generates into the ROOT node_modules where pnpm hoisted the package.
+# This fixes the "Module '@prisma/client' has no exported member" error.
+RUN npx prisma generate --schema=apps/backend/prisma/schema.prisma
 
-# 8. Build the Backend
+# 8. Patch the Build Script (CRITICAL FIX)
+# We remove 'prisma generate' from the package.json build script using 'sed'.
+# This prevents 'pnpm build' from re-generating the client into the wrong (local) directory.
+RUN sed -i 's/npx prisma generate && //g' apps/backend/package.json && \
+    sed -i 's/prisma generate && //g' apps/backend/package.json
+
+# 9. Build the Backend
 RUN pnpm --filter backend build
 
-# 9. Expose Port
+# 10. Expose Port
 EXPOSE 3001
 
-# 10. Start Command
-# We run the compiled main.js directly for performance
+# 11. Start Command
 CMD ["node", "apps/backend/dist/main.js"]
