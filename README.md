@@ -70,8 +70,8 @@ PostgreSQL (Running locally or via Docker on port 5432)
 
 Clone the repository and install dependencies from the root:
 
-git clone [https://github.com/YOUR_USERNAME/slooze-food.git](https://github.com/YOUR_USERNAME/slooze-food.git)
-cd slooze-food
+git clone [https://github.com/VivekKavala/slooze-fs-assessment.git](https://github.com/VivekKavala/slooze-fs-assessment.git)
+cd slooze-fs-assessment
 pnpm install
 
 3. Environment Setup (Backend)
