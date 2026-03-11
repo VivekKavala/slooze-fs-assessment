@@ -11,6 +11,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
     RestaurantsModule,
     OrdersModule,
     PaymentMethodsModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],

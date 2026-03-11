@@ -30,6 +30,59 @@ const CREATE_ORDER = gql`
   }
 `;
 
+const GET_REGIONAL_CART = gql`
+  query GetRegionalCart {
+    myRegionalCart {
+      id
+      restaurantId
+      items {
+        id
+        menuItemId
+        name
+        price
+        quantity
+      }
+    }
+  }
+`;
+
+const ADD_TO_CART = gql`
+  mutation AddToCart($input: AddToCartInput!) {
+    addToCart(input: $input) {
+      id
+      restaurantId
+      items {
+        id
+        menuItemId
+        name
+        price
+        quantity
+      }
+    }
+  }
+`;
+
+const CLEAR_CART = gql`
+  mutation ClearCart {
+    clearCart
+  }
+`;
+
+const REMOVE_FROM_CART = gql`
+  mutation RemoveFromCart($cartItemId: String!) {
+    removeFromCart(cartItemId: $cartItemId) {
+      id
+      items {
+        id
+        menuItemId
+        name
+        price
+        quantity
+      }
+    }
+  }
+`;
+
 interface CartItem {
   menuItemId: string;
   name: string;
@@ -42,12 +95,18 @@ export default function RestaurantPage() {
   const id = params.id as string;
   const router = useRouter();
 
-  const [cart, setCart] = useState<CartItem[]>([]);
-
   //  State to track quantity inputs for each menu item (before adding to cart)
   const [inputs, setInputs] = useState<{ [key: string]: number }>({});
 
   const { loading, error, data } = useQuery(GET_MENU, { variables: { id } });
+
+  const { data: cartData, refetch: refetchCart } = useQuery(GET_REGIONAL_CART, { fetchPolicy: "network-only" });
+  const [addToCartMut] = useMutation(ADD_TO_CART);
+  const [clearCartMut] = useMutation(CLEAR_CART);
+  const [removeFromCartMut] = useMutation(REMOVE_FROM_CART);
+
+  const cart = cartData?.myRegionalCart?.items || [];
+  const cartRestaurantId = cartData?.myRegionalCart?.restaurantId || null;
 
   const [createOrder, { loading: ordering }] = useMutation(CREATE_ORDER, {
     onCompleted: () => {
@@ -74,37 +133,47 @@ export default function RestaurantPage() {
   };
 
   // 2. Add Specific Quantity to Cart
-  const addToCart = (item: any) => {
+  const addToCart = async (item: any) => {
     const qtyToAdd = inputs[item.id] || 1; // Get selected qty or default 1
 
-    setCart((prev) => {
-      const existing = prev.find((i) => i.menuItemId === item.id);
-      if (existing) {
-        // Update existing item
-        return prev.map((i) =>
-          i.menuItemId === item.id
-            ? { ...i, quantity: i.quantity + qtyToAdd }
-            : i,
-        );
+    if (cartRestaurantId && cartRestaurantId !== id) {
+      const confirmClear = window.confirm(
+        "You already have some items in the cart from another restaurant. Should we clean the cart and add this new one?"
+      );
+      if (confirmClear) {
+        await clearCartMut();
+      } else {
+        const goToCart = window.confirm("Would you like to go to your cart to manage it?");
+        if (goToCart) router.push("/cart");
+        return;
       }
-      // Add new item
-      return [
-        ...prev,
-        {
-          menuItemId: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: qtyToAdd,
-        },
-      ];
-    });
+    }
 
-    // Optional: Reset input back to 1 after adding
-    setInputs((prev) => ({ ...prev, [item.id]: 1 }));
+    try {
+      await addToCartMut({
+        variables: {
+          input: {
+            menuItemId: item.id,
+            restaurantId: id,
+            quantity: qtyToAdd,
+          },
+        },
+      });
+      toast.success("Added to cart");
+      refetchCart();
+      setInputs((prev) => ({ ...prev, [item.id]: 1 }));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add to cart");
+    }
   };
 
-  const removeFromCart = (itemId: string) => {
-    setCart((prev) => prev.filter((i) => i.menuItemId !== itemId));
+  const removeFromCart = async (cartItemId: string) => {
+    try {
+      await removeFromCartMut({ variables: { cartItemId } });
+      refetchCart();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove item");
+    }
   };
 
   const handleCheckout = () => {
@@ -113,16 +182,16 @@ export default function RestaurantPage() {
       variables: {
         input: {
           restaurantId: id,
-          items: cart.map(({ menuItemId, quantity }) => ({
-            menuItemId,
-            quantity,
+          items: cart.map((item: any) => ({
+            menuItemId: item.menuItemId,
+            quantity: item.quantity,
           })),
         },
       },
     });
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
 
   if (loading)
     return (
@@ -231,9 +300,9 @@ export default function RestaurantPage() {
             ) : (
               <div className="space-y-4">
                 <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
-                  {cart.map((item) => (
+                  {cart.map((item: any) => (
                     <div
-                      key={item.menuItemId}
+                      key={item.id}
                       className="flex justify-between items-center text-sm"
                     >
                       <div>
@@ -245,7 +314,7 @@ export default function RestaurantPage() {
                           ₹{(item.price * item.quantity).toFixed(2)}
                         </span>
                         <button
-                          onClick={() => removeFromCart(item.menuItemId)}
+                          onClick={() => removeFromCart(item.id)}
                           className="text-red-400 hover:text-red-600 font-bold"
                         >
                           ✕
@@ -265,9 +334,15 @@ export default function RestaurantPage() {
                   <button
                     onClick={handleCheckout}
                     disabled={ordering}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 flex justify-center gap-2"
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 flex justify-center gap-2 mb-2"
                   >
                     {ordering ? "Processing..." : "Confirm Order 🚀"}
+                  </button>
+                  <button
+                    onClick={() => router.push("/cart")}
+                    className="w-full bg-blue-100 text-blue-700 py-3 rounded-lg font-bold hover:bg-blue-200 transition text-center"
+                  >
+                    View Cart ({cart.length} items)
                   </button>
                 </div>
               </div>

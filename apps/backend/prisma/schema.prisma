@@ -40,6 +40,7 @@ model Restaurant {
   orders    Order[]
 
   createdAt DateTime @default(now())
+  carts     Cart[]
 }
 
 model MenuItem {
@@ -50,6 +51,29 @@ model MenuItem {
 
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
   restaurantId String
+}
+
+model Cart {
+  id           String     @id @default(uuid())
+  region       Region     @unique // A region has exactly one cart
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  menuItemId String
+  name       String
+  price      Float
+  quantity   Int
+  cartId     String
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // 3. Orders & Payments

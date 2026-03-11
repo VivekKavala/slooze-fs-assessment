@@ -2,9 +2,32 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddToCartInput {
+  menuItemId: String!
+  quantity: Int!
+  restaurantId: String!
+}
+
 type AuthResponse {
   accessToken: String!
   user: User!
+}
+
+type Cart {
+  createdAt: DateTime!
+  id: String!
+  items: [CartItem!]!
+  region: String!
+  restaurant: Restaurant!
+  restaurantId: String!
+}
+
+type CartItem {
+  id: String!
+  menuItemId: String!
+  name: String!
+  price: Float!
+  quantity: Int!
 }
 
 input CreateOrderInput {
@@ -30,11 +53,14 @@ type MenuItem {
 }
 
 type Mutation {
+  addToCart(input: AddToCartInput!): Cart!
   cancelOrder(id: String!): Order!
+  clearCart: Boolean!
   createOrder(createOrderInput: CreateOrderInput!): Order!
   createPaymentMethod(last4: String!, name: String!): PaymentMethod!
   login(loginInput: LoginInput!): AuthResponse!
   payOrder(id: String!): Order!
+  removeFromCart(cartItemId: String!): Cart
   removePaymentMethod(id: String!): PaymentMethod!
 }
 
@@ -74,6 +100,7 @@ type PaymentMethod {
 }
 
 type Query {
+  myRegionalCart: Cart
   orders: [Order!]!
   paymentMethods: [PaymentMethod!]!
   restaurant(id: String!): Restaurant!

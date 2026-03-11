@@ -3,6 +3,6 @@ import { RestaurantsService } from './restaurants.service';
 import { RestaurantsResolver } from './restaurants.resolver';
 
 @Module({
-  providers: [RestaurantsService, RestaurantsResolver]
+  providers: [RestaurantsService, RestaurantsResolver],
 })
 export class RestaurantsModule {}

@@ -2,11 +2,33 @@
 
 import { useApp } from "../context/AppContext";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery, gql } from "@apollo/client";
+
+const GET_REGIONAL_CART = gql`
+  query GetRegionalCart {
+    myRegionalCart {
+      id
+      items {
+        id
+        quantity
+      }
+    }
+  }
+`;
 
 export default function Header() {
   const { user, logout } = useApp(); // No debugMode
   const router = useRouter();
   const pathname = usePathname();
+
+  const { data } = useQuery(GET_REGIONAL_CART, {
+    skip: !user, // Don't fetch if not logged in
+    fetchPolicy: "cache-and-network" // keep the header updated
+  });
+
+  const cartItemsCount = data?.myRegionalCart?.items?.reduce(
+    (acc: number, item: any) => acc + item.quantity, 0
+  ) || 0;
 
   if (pathname === "/login") return null;
 
@@ -33,6 +55,17 @@ export default function Header() {
               className="hover:text-blue-600 transition"
             >
               Orders
+            </button>
+            <button
+              onClick={() => router.push("/cart")}
+              className="hover:text-blue-600 transition flex items-center gap-1 relative"
+            >
+              Cart
+              {cartItemsCount > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full absolute -top-2 -right-3">
+                  {cartItemsCount}
+                </span>
+              )}
             </button>
           </nav>
         </div>
